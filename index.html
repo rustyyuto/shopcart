@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop Cart — Knockout.js</title>
+<script src="https://cdn.jsdelivr.net/npm/knockout@3.5.1/build/output/knockout-latest.js"></script>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1f2430;
+    --muted: #74808f;
+    --border: #e3e6ea;
+    --accent: #2f8f5b;
+    --accent-dark: #24743f;
+    --accent-light: #e7f5ed;
+    --danger: #e25555;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 40px 16px;
+  }
+
+  .app {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  header { margin-bottom: 24px; }
+  header h1 { font-size: 22px; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+    align-items: start;
+  }
+
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 14px;
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 480px) {
+    .product-grid { grid-template-columns: 1fr; }
+  }
+
+  .product {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .product-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .product-name {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .product-price {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .add-btn {
+    margin-top: auto;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .add-btn:hover { background: var(--accent-dark); }
+
+  .cart-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cart-item:last-of-type { border-bottom: none; }
+
+  .cart-item-icon { font-size: 20px; }
+
+  .cart-item-info { flex: 1; min-width: 0; }
+  .cart-item-name { font-size: 13px; font-weight: 600; }
+  .cart-item-price { font-size: 12px; color: var(--muted); }
+
+  .qty-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .qty-btn {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .qty-btn:hover { background: var(--accent-light); border-color: var(--accent); }
+
+  .qty-value { min-width: 16px; text-align: center; font-size: 13px; }
+
+  .remove-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 15px;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+
+  .remove-btn:hover { color: var(--danger); }
+
+  .empty-cart {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 20px 0;
+  }
+
+  .totals {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .totals-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: var(--muted);
+  }
+
+  .totals-row.grand {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 15px;
+    margin-top: 10px;
+  }
+
+  .checkout-btn {
+    width: 100%;
+    margin-top: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .checkout-btn:hover { background: var(--accent-dark); }
+  .checkout-btn:disabled {
+    background: var(--border);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  .confirm-banner {
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-top: 12px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>Shop Cart</h1>
+    <p>A small shopping cart built with Knockout.js</p>
+  </header>
+
+  <div class="layout">
+    <div class="card">
+      <p class="section-title">Products</p>
+      <div class="product-grid" data-bind="foreach: products">
+        <div class="product">
+          <span class="product-icon" data-bind="text: icon"></span>
+          <span class="product-name" data-bind="text: name"></span>
+          <span class="product-price" data-bind="text: '$' + price.toFixed(2)"></span>
+          <button type="button" class="add-btn" data-bind="click: $parent.addToCart">Add to cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="section-title">Cart (<span data-bind="text: cartCount"></span>)</p>
+
+      <div class="empty-cart" data-bind="visible: cart().length === 0">
+        Your cart is empty.
+      </div>
+
+      <div data-bind="foreach: cart">
+        <div class="cart-item">
+          <span class="cart-item-icon" data-bind="text: product.icon"></span>
+          <div class="cart-item-info">
+            <div class="cart-item-name" data-bind="text: product.name"></div>
+            <div class="cart-item-price" data-bind="text: '$' + product.price.toFixed(2)"></div>
+          </div>
+          <div class="qty-controls">
+            <button type="button" class="qty-btn" data-bind="click: $parent.decrement">−</button>
+            <span class="qty-value" data-bind="text: quantity"></span>
+            <button type="button" class="qty-btn" data-bind="click: $parent.increment">+</button>
+          </div>
+          <button type="button" class="remove-btn" title="Remove" data-bind="click: $parent.removeFromCart">✕</button>
+        </div>
+      </div>
+
+      <div class="totals" data-bind="visible: cart().length > 0">
+        <div class="totals-row">
+          <span>Subtotal</span>
+          <span data-bind="text: '$' + subtotal().toFixed(2)"></span>
+        </div>
+        <div class="totals-row">
+          <span>Tax (8%)</span>
+          <span data-bind="text: '$' + tax().toFixed(2)"></span>
+        </div>
+        <div class="totals-row grand">
+          <span>Total</span>
+          <span data-bind="text: '$' + total().toFixed(2)"></span>
+        </div>
+      </div>
+
+      <button type="button" class="checkout-btn" data-bind="click: checkout, enable: cart().length > 0">
+        Checkout
+      </button>
+
+      <div class="confirm-banner" data-bind="visible: orderPlaced">
+        Order placed. Thanks for shopping!
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function CartItem(product) {
+    this.product = product;
+    this.quantity = ko.observable(1);
+  }
+
+  function ShopViewModel() {
+    var self = this;
+
+    self.products = [
+      { id: 1, name: 'Wireless Mouse', price: 19.99, icon: '🖱️' },
+      { id: 2, name: 'Mechanical Keyboard', price: 59.99, icon: '⌨️' },
+      { id: 3, name: 'Desk Lamp', price: 24.50, icon: '💡' },
+      { id: 4, name: 'Coffee Mug', price: 9.99, icon: '☕' },
+      { id: 5, name: 'Notebook', price: 4.99, icon: '📓' },
+      { id: 6, name: 'Headphones', price: 79.00, icon: '🎧' }
+    ];
+
+    self.cart = ko.observableArray([]);
+    self.orderPlaced = ko.observable(false);
+
+    self.addToCart = function (product) {
+      self.orderPlaced(false);
+      var existing = self.cart().filter(function (item) {
+        return item.product.id === product.id;
+      })[0];
+
+      if (existing) {
+        existing.quantity(existing.quantity() + 1);
+      } else {
+        self.cart.push(new CartItem(product));
+      }
+    };
+
+    self.increment = function (item) {
+      item.quantity(item.quantity() + 1);
+    };
+
+    self.decrement = function (item) {
+      if (item.quantity() > 1) {
+        item.quantity(item.quantity() - 1);
+      } else {
+        self.cart.remove(item);
+      }
+    };
+
+    self.removeFromCart = function (item) {
+      self.cart.remove(item);
+    };
+
+    self.cartCount = ko.computed(function () {
+      return self.cart().reduce(function (sum, item) {
+        return sum + item.quantity();
+      }, 0);
+    });
+
+    self.subtotal = ko.computed(function () {
+      return self.cart().reduce(function (sum, item) {
+        return sum + item.product.price * item.quantity();
+      }, 0);
+    });
+
+    self.tax = ko.computed(function () {
+      return self.subtotal() * 0.08;
+    });
+
+    self.total = ko.computed(function () {
+      return self.subtotal() + self.tax();
+    });
+
+    self.checkout = function () {
+      if (self.cart().length === 0) {
+        return;
+      }
+      self.cart([]);
+      self.orderPlaced(true);
+    };
+  }
+
+  ko.applyBindings(new ShopViewModel());
+</script>
+
+</body>
+</html>
